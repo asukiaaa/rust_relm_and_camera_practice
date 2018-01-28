@@ -8,6 +8,7 @@ extern crate relm_derive;
 extern crate rscam;
 
 use futures_glib::Timeout;
+use gdk_pixbuf::{Pixbuf, PixbufLoader};
 use gtk::{
     Button,
     ButtonExt,
@@ -22,7 +23,6 @@ use gtk::{
     WindowType,
 };
 use gtk::Orientation::Vertical;
-use gdk_pixbuf::{Pixbuf, PixbufLoader};
 use relm::{Relm, Update, Widget};
 use rscam::{Camera, Config};
 use std::time::Duration;
@@ -70,46 +70,19 @@ impl Update for Win {
     }
 
     fn update(&mut self, event: Msg) {
-        let label = &self.state_label;
-        let image = &self.image;
-
         match event {
             Msg::ToggleCamera => {
-                match self.model.started_camera {
-                    Some(_) => {
-                        self.model.started_camera = None;
-                        label.set_text("closed camera");
-                    },
-                    None => {
-                        let mut camera = Camera::new("/dev/video0").unwrap();
-                        camera.start(&Config {
-                            interval: (1, 30), // 30 fps.
-                            resolution: (640, 360),
-                            format: b"MJPG",
-                            ..Default::default()
-                        }).unwrap();
-                        self.model.started_camera = Some(camera);
-                        label.set_text("opened camera");
-
-                        let stream = Timeout::new(Duration::from_millis(10));
-                        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
-                    },
+                if self.model.started_camera.is_some() {
+                    self.close_camera();
+                } else {
+                    self.open_camera();
+                    self.set_timeout_for_msg_update_camera_image();
                 }
             },
             Msg::UpdateCameraImage(()) => {
-                match self.model.started_camera {
-                    Some(ref camera) => {
-                        let frame = camera.capture().unwrap();
-                        let pixbuf = jpeg_vec_to_pixbuf(&frame[..]);
-                        image.set_from_pixbuf(&pixbuf);
-                        while gtk::events_pending() {
-                            gtk::main_iteration_do(true);
-                        }
-
-                        let stream = Timeout::new(Duration::from_millis(10));
-                        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
-                    },
-                    None => return,
+                if self.model.started_camera.is_some() {
+                    self.update_camera_image();
+                    self.set_timeout_for_msg_update_camera_image();
                 }
             }
             Msg::Quit => gtk::main_quit(),
@@ -140,9 +113,7 @@ impl Widget for Win {
         vbox.add(&image);
 
         let window = Window::new(WindowType::Toplevel);
-
         window.add(&vbox);
-
         window.show_all();
 
         // Send the message Increment when the button is clicked.
@@ -155,6 +126,45 @@ impl Widget for Win {
             model,
             window: window,
         }
+    }
+}
+
+impl Win {
+    fn set_timeout_for_msg_update_camera_image(&mut self) {
+        let stream = Timeout::new(Duration::from_millis(10));
+        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
+    }
+
+    fn update_camera_image(&mut self) {
+        {
+            let camera = self.model.started_camera.as_mut().unwrap();
+            let image = &self.image;
+            let frame = camera.capture().unwrap();
+            let pixbuf = jpeg_vec_to_pixbuf(&frame[..]);
+            image.set_from_pixbuf(&pixbuf);
+            while gtk::events_pending() {
+                gtk::main_iteration_do(true);
+            }
+        }
+    }
+
+    fn open_camera(&mut self) {
+        let label = &self.state_label;
+        let mut camera = Camera::new("/dev/video0").unwrap();
+        camera.start(&Config {
+            interval: (1, 30), // 30 fps.
+            resolution: (640, 360),
+            format: b"MJPG",
+            ..Default::default()
+        }).unwrap();
+        self.model.started_camera = Some(camera);
+        label.set_text("opened camera");
+    }
+
+    fn close_camera(&mut self) {
+        self.model.started_camera = None;
+        let label = &self.state_label;
+        label.set_text("closed camera");
     }
 }
 
