@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["asuki <asukiaaa@gmail.com>"]
 
 [dependencies]
+futures-glib = "0.3.2"
 gtk = "^0.3.0"
 gdk-pixbuf = "0.3.0"
 relm = "^0.11.0"
