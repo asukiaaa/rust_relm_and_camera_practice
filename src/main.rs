@@ -29,14 +29,10 @@ use std::time::Duration;
 
 struct Model {
     started_camera: Option<Camera>,
-    counter: i32,
 }
 
 #[derive(Msg)]
 enum Msg {
-    Decrement,
-    Increment,
-    // LoadImage,
     ToggleCamera,
     Quit,
     UpdateCameraImage(()),
@@ -44,7 +40,7 @@ enum Msg {
 
 // Create the structure that holds the widgets used in the view.
 struct Win {
-    counter_label: Label,
+    state_label: Label,
     image: Image,
     model: Model,
     window: Window,
@@ -68,7 +64,6 @@ impl Update for Win {
     fn model(_: &Relm<Self>, _: ()) -> Model {
         Model {
             started_camera: None,
-            counter: 0,
         }
     }
 
@@ -78,23 +73,15 @@ impl Update for Win {
     }
 
     fn update(&mut self, event: Msg) {
-        let label = &self.counter_label;
+        let label = &self.state_label;
         let image = &self.image;
 
         match event {
-            Msg::Decrement => {
-                self.model.counter -= 1;
-                // Manually update the view.
-                label.set_text(&self.model.counter.to_string());
-            },
-            Msg::Increment => {
-                self.model.counter += 1;
-                label.set_text(&self.model.counter.to_string());
-            },
             Msg::ToggleCamera => {
                 match self.model.started_camera {
                     Some(_) => {
                         self.model.started_camera = None;
+                        label.set_text("closed camera");
                     },
                     None => {
                         let mut camera = Camera::new("/dev/video0").unwrap();
@@ -105,14 +92,10 @@ impl Update for Win {
                             ..Default::default()
                         }).unwrap();
                         self.model.started_camera = Some(camera);
+                        label.set_text("opened camera");
                     },
                 }
             },
-            // Msg::LoadImage => {
-            //     let new_image = Image::new_from_file("../rust_relm_practice/data/lena.jpg");
-            //     let pixbuf = new_image.get_pixbuf().unwrap();
-            //     image.set_from_pixbuf(&pixbuf);
-            // }
             Msg::UpdateCameraImage(()) => {
                 match self.model.started_camera {
                     Some(ref camera) => {
@@ -141,14 +124,8 @@ impl Widget for Win {
         // Create the view using the normal GTK+ method calls.
         let vbox = gtk::Box::new(Vertical, 0);
 
-        let plus_button = Button::new_with_label("+");
-        vbox.add(&plus_button);
-
-        let counter_label = Label::new("0");
-        vbox.add(&counter_label);
-
-        let minus_button = Button::new_with_label("-");
-        vbox.add(&minus_button);
+        let state_label = Label::new("wait to toggle camera");
+        vbox.add(&state_label);
 
         let toggle_camera_button = Button::new_with_label("toggle camera");
         vbox.add(&toggle_camera_button);
@@ -163,13 +140,11 @@ impl Widget for Win {
         window.show_all();
 
         // Send the message Increment when the button is clicked.
-        connect!(relm, plus_button, connect_clicked(_), Msg::Increment);
-        connect!(relm, minus_button, connect_clicked(_), Msg::Decrement);
         connect!(relm, toggle_camera_button, connect_clicked(_), Msg::ToggleCamera);
         connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));
 
         Win {
-            counter_label: counter_label,
+            state_label: state_label,
             image: image,
             model,
             window: window,
