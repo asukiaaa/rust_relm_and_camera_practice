@@ -14,3 +14,7 @@ sudo apt install libgtk-3-dev
 - [2.13. Reserved Format Identifiers](https://linuxtv.org/downloads/v4l-dvb-apis/uapi/v4l/pixfmt-reserved.html?highlight=mjpg)
 - [Gdk pixbuf load image from memory](https://stackoverflow.com/questions/14121166/gdk-pixbuf-load-image-from-memory)
 - [Struct gdk_pixbuf::PixbufLoader](http://gtk-rs.org/docs/gdk_pixbuf/struct.PixbufLoader.html#method.loader_write)
+- [How do I update/redraw a GTK Widget (GTKLabel) internally without a key press event using python?
+](https://stackoverflow.com/questions/8381631/how-do-i-update-redraw-a-gtk-widget-gtklabel-internally-without-a-key-press-ev)
+- [fn connect_exec_ignore_err<CALLBACK, STREAM, TOSTREAM>](https://docs.rs/relm/0.11.0/relm/struct.Relm.html#method.connect_exec_ignore_err)
+- [relm/examples/async/src/main.rs](https://github.com/antoyo/relm/blob/74bb6e35641a14edeca286506f17fea1ce9ebadb/examples/async/src/main.rs)

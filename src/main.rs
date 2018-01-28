@@ -7,7 +7,7 @@ extern crate relm;
 extern crate relm_derive;
 extern crate rscam;
 
-use futures_glib::Interval;
+use futures_glib::Timeout;
 use gtk::{
     Button,
     ButtonExt,
@@ -28,6 +28,7 @@ use rscam::{Camera, Config};
 use std::time::Duration;
 
 struct Model {
+    relm: Relm<Win>,
     started_camera: Option<Camera>,
 }
 
@@ -61,15 +62,11 @@ impl Update for Win {
     // Specify the type of the messages sent to the update function.
     type Msg = Msg;
 
-    fn model(_: &Relm<Self>, _: ()) -> Model {
+    fn model(relm: &Relm<Self>, _: ()) -> Model {
         Model {
+            relm: relm.clone(),
             started_camera: None,
         }
-    }
-
-    fn subscriptions(&mut self, relm: &Relm<Self>) {
-        let stream = Interval::new(Duration::from_millis(100));
-        relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
     }
 
     fn update(&mut self, event: Msg) {
@@ -93,6 +90,9 @@ impl Update for Win {
                         }).unwrap();
                         self.model.started_camera = Some(camera);
                         label.set_text("opened camera");
+
+                        let stream = Timeout::new(Duration::from_millis(10));
+                        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
                     },
                 }
             },
@@ -102,6 +102,12 @@ impl Update for Win {
                         let frame = camera.capture().unwrap();
                         let pixbuf = jpeg_vec_to_pixbuf(&frame[..]);
                         image.set_from_pixbuf(&pixbuf);
+                        while gtk::events_pending() {
+                            gtk::main_iteration_do(true);
+                        }
+
+                        let stream = Timeout::new(Duration::from_millis(10));
+                        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
                     },
                     None => return,
                 }
