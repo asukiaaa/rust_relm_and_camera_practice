@@ -86,7 +86,7 @@ impl Update for Win {
                     self.set_msg_timeout(10, Msg::UpdateCameraImage);
                     // self.set_timeout_for_msg_update_camera_image();
                 }
-            }
+            },
             Msg::Quit => gtk::main_quit(),
         }
     }
@@ -149,15 +149,13 @@ impl Win {
     // }
 
     fn update_camera_image(&mut self) {
-        {
-            let camera = self.model.started_camera.as_mut().unwrap();
-            let image = &self.image;
-            let frame = camera.capture().unwrap();
-            let pixbuf = jpeg_vec_to_pixbuf(&frame[..]);
-            image.set_from_pixbuf(&pixbuf);
-            while gtk::events_pending() {
-                gtk::main_iteration_do(true);
-            }
+        let camera = self.model.started_camera.as_mut().unwrap();
+        let image = &self.image;
+        let frame = camera.capture().unwrap();
+        let pixbuf = jpeg_vec_to_pixbuf(&frame[..]);
+        image.set_from_pixbuf(&pixbuf);
+        while gtk::events_pending() {
+            gtk::main_iteration_do(true);
         }
     }
 
