@@ -76,13 +76,15 @@ impl Update for Win {
                     self.close_camera();
                 } else {
                     self.open_camera();
-                    self.set_timeout_for_msg_update_camera_image();
+                    self.set_msg_timeout(10, Msg::UpdateCameraImage);
+                    // self.set_timeout_for_msg_update_camera_image();
                 }
             },
             Msg::UpdateCameraImage(()) => {
                 if self.model.started_camera.is_some() {
                     self.update_camera_image();
-                    self.set_timeout_for_msg_update_camera_image();
+                    self.set_msg_timeout(10, Msg::UpdateCameraImage);
+                    // self.set_timeout_for_msg_update_camera_image();
                 }
             }
             Msg::Quit => gtk::main_quit(),
@@ -130,10 +132,21 @@ impl Widget for Win {
 }
 
 impl Win {
-    fn set_timeout_for_msg_update_camera_image(&mut self) {
-        let stream = Timeout::new(Duration::from_millis(10));
-        self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
+    fn set_msg_timeout<CALLBACK>(
+        &mut self,
+        millis: u64,
+        callback: CALLBACK,
+    )
+        where CALLBACK: Fn(()) -> Msg + 'static,
+    {
+        let stream = Timeout::new(Duration::from_millis(millis));
+        self.model.relm.connect_exec_ignore_err(stream, callback);
     }
+
+    // fn set_timeout_for_msg_update_camera_image(&mut self) {
+    //     let stream = Timeout::new(Duration::from_millis(10));
+    //     self.model.relm.connect_exec_ignore_err(stream, Msg::UpdateCameraImage);
+    // }
 
     fn update_camera_image(&mut self) {
         {
