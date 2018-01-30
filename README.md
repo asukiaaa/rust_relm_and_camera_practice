@@ -1,8 +1,19 @@
 # rust_relm_and_camera_practice
 
+# Requirement
+[Rust](https://www.rust-lang.org)
+
+Tested in 1.22.1.
+
+# Setup
 ```
 sudo apt install libv4l-dev
 sudo apt install libgtk-3-dev
+```
+
+# Run
+```
+cargo run
 ```
 
 # References
