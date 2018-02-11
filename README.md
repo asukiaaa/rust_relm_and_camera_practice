@@ -16,6 +16,9 @@ sudo apt install libgtk-3-dev
 cargo run
 ```
 
+# License
+MIT
+
 # References
 - [rscamとrelmを利用して、カメラの画像を表示するアプリをrustで作る方法](http://asukiaaa.blogspot.com/2018/01/rscamrelmrust.html)
 - [Are there any video capture libraries out there?](https://users.rust-lang.org/t/are-there-any-video-capture-libraries-out-there/11241)
